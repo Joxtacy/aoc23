@@ -1,5 +1,3 @@
-use std::iter::from_fn;
-
 fn main() {
     let input = include_str!("./input.txt");
 
@@ -11,83 +9,54 @@ fn main() {
 }
 
 fn part1(input: &str) -> u32 {
-    let mut sum = 0;
-    for line in input.lines() {
-        let mut numbers = line.chars().filter_map(|c| c.to_digit(10));
-        let first = numbers.next().expect("should be a number");
-        let x = match numbers.last() {
-            Some(last) => {
-                format!("{}{}", first, last)
+    input
+        .lines()
+        .map(|line| {
+            let mut numbers = line.chars().filter_map(|c| c.to_digit(10));
+            let first = numbers.next().expect("should be a number");
+            match numbers.last() {
+                Some(last) => first * 10 + last,
+                None => first * 10 + first,
             }
-            None => {
-                format!("{}{}", first, first)
-            }
-        }
-        .parse::<u32>()
-        .expect("should be a valid number");
-        sum += x;
-    }
-    sum
+        })
+        .sum::<u32>()
 }
 
 fn part2(input: &str) -> u32 {
-    let mut sum = 0;
-    for line in input.lines() {
-        let mut index = 0;
-        let line_iter = from_fn(move || {
-            let reduced_line = &line[index..];
+    input.lines().map(process_line).sum::<u32>()
+}
 
-            let result = if reduced_line.starts_with("one") {
-                // adding to the index with the length of the word did not work. Not sure why.
-                // Seems like skipping can cause errors when you have a string like `twone` at the
-                // end, `one` is correct but the skipping would give `two`.
-                //index += "one".len();
-                Some('1')
-            } else if reduced_line.starts_with("two") {
-                //index += "two".len();
-                Some('2')
-            } else if reduced_line.starts_with("three") {
-                //index += "three".len();
-                Some('3')
-            } else if reduced_line.starts_with("four") {
-                //index += "four".len();
-                Some('4')
-            } else if reduced_line.starts_with("five") {
-                //index += "five".len();
-                Some('5')
-            } else if reduced_line.starts_with("six") {
-                //index += "six".len();
-                Some('6')
-            } else if reduced_line.starts_with("seven") {
-                //index += "seven".len();
-                Some('7')
-            } else if reduced_line.starts_with("eight") {
-                //index += "eight".len();
-                Some('8')
-            } else if reduced_line.starts_with("nine") {
-                //index += "nine".len();
-                Some('9')
-            } else {
-                //index += 1;
-                reduced_line.chars().next()
-            };
+fn process_line(line: &str) -> u32 {
+    let mut it = (0..line.len()).filter_map(|index| {
+        let reduced_line = &line[index..];
 
-            index += 1;
-
-            result
-        });
-        let numbers = line_iter
-            .filter_map(|c| c.to_digit(10))
-            .collect::<Vec<u32>>();
-        if numbers.len() >= 2 {
-            let x = format!("{}{}", numbers[0], numbers.last().unwrap());
-            sum += x.parse::<u32>().unwrap();
-        } else if numbers.len() == 1 {
-            let x = format!("{}{}", numbers[0], numbers[0]);
-            sum += x.parse::<u32>().unwrap();
+        if reduced_line.starts_with("one") {
+            Some(1)
+        } else if reduced_line.starts_with("two") {
+            Some(2)
+        } else if reduced_line.starts_with("three") {
+            Some(3)
+        } else if reduced_line.starts_with("four") {
+            Some(4)
+        } else if reduced_line.starts_with("five") {
+            Some(5)
+        } else if reduced_line.starts_with("six") {
+            Some(6)
+        } else if reduced_line.starts_with("seven") {
+            Some(7)
+        } else if reduced_line.starts_with("eight") {
+            Some(8)
+        } else if reduced_line.starts_with("nine") {
+            Some(9)
+        } else {
+            reduced_line.chars().next().unwrap().to_digit(10)
         }
+    });
+    let first = it.next().expect("should be a number");
+    match it.last() {
+        Some(last) => first * 10 + last,
+        None => first * 10 + first,
     }
-    sum
 }
 
 #[cfg(test)]
