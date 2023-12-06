@@ -7,4 +7,5 @@ members = [
 
 [workspace.dependencies]
 iter_tools = "0.4.0"
+rayon = "1.8.0"
 
