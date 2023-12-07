@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 rayon = { workspace = true }
+indicatif = { workspace = true }

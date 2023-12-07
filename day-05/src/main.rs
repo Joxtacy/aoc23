@@ -1,3 +1,4 @@
+use indicatif::{ParallelProgressIterator, ProgressIterator};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::{collections::BTreeMap, ops::Range, vec};
 
@@ -101,9 +102,11 @@ fn part_2(input: &str) -> u64 {
     }
     // dbg!(&seed_ranges);
 
+    /*
     for seed_range in &seed_ranges {
         dbg!(&seed_range);
     }
+    */
 
     let map = input
         .split("\n\n")
@@ -131,11 +134,13 @@ fn part_2(input: &str) -> u64 {
         })
         .collect::<BTreeMap<&str, Vec<(Range<u64>, Range<u64>)>>>();
 
-    println!("Doing the mapping thing");
-
-    seed_ranges
-        .into_par_iter()
+    let seeds: Vec<u64> = seed_ranges
+        .into_iter()
         .flat_map(|seed_range| seed_range.clone())
+        .collect();
+    seeds
+        .into_par_iter()
+        .progress()
         .map(|seed| {
             let seed_to_soil = map.get("seed-to-soil").unwrap();
             let soil = process(seed_to_soil, seed);
@@ -157,7 +162,7 @@ fn part_2(input: &str) -> u64 {
             //dbg!(&humidity);
             let humidity_to_location = map.get("humidity-to-location").unwrap();
             let location = process(humidity_to_location, humidity);
-            dbg!(&location);
+            //dbg!(&location);
             location
         })
         .min()
