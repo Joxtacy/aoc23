@@ -24,20 +24,23 @@ fn part_1(input: &str) -> usize {
         })
         .collect();
 
-    let mut node = map.get("AAA").expect("should have the AAA node");
+    let mut current_node = "AAA";
+    let steps = instructions
+        .chars()
+        .cycle()
+        .enumerate()
+        .find_map(|(index, instruction)| {
+            let node = map.get(current_node).expect("should have the next node");
 
-    let mut steps = 0;
-    for i in instructions.chars().cycle() {
-        steps += 1;
+            current_node = if instruction == 'L' { &node.0 } else { &node.1 };
 
-        let next_node = if i == 'L' { &node.0 } else { &node.1 };
-
-        if next_node == "ZZZ" {
-            break;
-        } else {
-            node = map.get(next_node).expect("should have the next node");
-        }
-    }
+            if current_node == "ZZZ" {
+                Some(index + 1)
+            } else {
+                None
+            }
+        })
+        .expect("should have found a result");
 
     steps
 }
