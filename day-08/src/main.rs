@@ -1,38 +1,73 @@
 use std::collections::HashMap;
 
+use nom::{
+    branch::alt,
+    bytes::complete::tag,
+    character::complete::{alpha1, char, line_ending, multispace1},
+    combinator::eof,
+    multi::{fold_many1, many1},
+    sequence::{delimited, separated_pair, terminated},
+    IResult, Parser,
+};
+
 fn main() {
     let input = include_str!("input.txt");
 
     println!("Part 1: {}", part_1(input));
 }
 
+#[derive(Debug)]
+enum Direction {
+    Left,
+    Right,
+}
+
+fn parse(input: &str) -> IResult<&str, (Vec<Direction>, HashMap<&str, (&str, &str)>)> {
+    let (input, instructions) = many1(alt((
+        char('L').map(|_| Direction::Left),
+        char('R').map(|_| Direction::Right),
+    )))(input)?;
+
+    let (input, _) = multispace1(input)?;
+
+    let (input, map) = fold_many1(
+        terminated(
+            separated_pair(
+                alpha1,
+                tag(" = "),
+                delimited(
+                    char('('),
+                    separated_pair(alpha1, tag(", "), alpha1),
+                    char(')'),
+                ),
+            ),
+            alt((line_ending, eof)),
+        ),
+        HashMap::new,
+        |mut acc: HashMap<&str, (&str, &str)>, (key, value)| {
+            acc.insert(key, value);
+            acc
+        },
+    )(input)?;
+
+    Ok((input, (instructions, map)))
+}
+
 fn part_1(input: &str) -> usize {
-    let mut lines = input.lines();
-    let instructions = lines.next().expect("should have line of instructions");
-    let _ = lines.next().expect("should be an empty line");
-
-    let map: HashMap<String, (String, String)> = lines
-        .map(|line| {
-            let (node, path) = line.split_once(" = ").expect("should have node and path");
-            let (left, right) = path
-                .split_once(", ")
-                .expect("should have a left and right path");
-            let left = &left[1..];
-            let right = &right[..right.len() - 1];
-
-            (node.to_string(), (left.to_string(), right.to_string()))
-        })
-        .collect();
+    let (_, (instructions, map)) = parse(input).expect("should parse without error");
 
     let mut current_node = "AAA";
     let steps = instructions
-        .chars()
+        .iter()
         .cycle()
         .enumerate()
         .find_map(|(index, instruction)| {
             let node = map.get(current_node).expect("should have the next node");
 
-            current_node = if instruction == 'L' { &node.0 } else { &node.1 };
+            current_node = match instruction {
+                Direction::Left => &node.0,
+                Direction::Right => &node.1,
+            };
 
             if current_node == "ZZZ" {
                 Some(index + 1)
